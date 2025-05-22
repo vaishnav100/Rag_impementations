@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Document Learning System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 2px dashed #dee2e6;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .upload-section.hidden {
+            display: none;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            overflow: hidden;
+            background: #667eea;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .file-input-wrapper:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-button {
+            background: #667eea;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .upload-button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .upload-info {
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .upload-progress {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Questions Section */
+        .questions-section {
+            display: none;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .question-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid #e1e5e9;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .question-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-card.answered-correct {
+            border-left: 4px solid #28a745;
+            background: rgba(40, 167, 69, 0.05);
+        }
+
+        .question-card.answered-incorrect {
+            border-left: 4px solid #dc3545;
+            background: rgba(220, 53, 69, 0.05);
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .question-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Multiple Choice Options */
+        .multiple-choice-section {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .choice-option {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .choice-option:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+        }
+
+        .choice-option.selected {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #667eea;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .choice-option.correct {
+            background: rgba(40, 167, 69, 0.1);
+            border-color: #28a745;
+            color: #28a745;
+        }
+
+        .choice-option.incorrect {
+            background: rgba(220, 53, 69, 0.1);
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+
+        .choice-option.disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .submit-answer-btn {
+            background: #28a745;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .submit-answer-btn:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .submit-answer-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Answer Section */
+        .answer-section {
+            display: none;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 15px;
+            border-left: 4px solid #28a745;
+        }
+
+        .answer-content {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #333;
+            white-space: pre-wrap;
+        }
+
+        .answer-meta {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* Feedback Section */
+        .feedback-section {
+            display: none;
+            margin-top: 15px;
+            padding: 20px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .feedback-section.correct {
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid #28a745;
+            color: #155724;
+        }
+
+        .feedback-section.incorrect {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid #dc3545;
+            color: #721c24;
+        }
+
+        .feedback-icon {
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+
+        /* Custom Question Section */
+        .custom-question-section {
+            display: none;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .custom-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+
+        .custom-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Progress Section */
+        .progress-section {
+            display: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Controls */
+        .controls {
+            display: none;
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .controls .btn {
+            margin: 0 10px;
+        }
+
+        /* Loading States */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff3d;
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error Messages */
+        .error-message {
+            background: #fff5f5;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #fc8181;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .success-message {
+            background: #f0fff4;
+            color: #22543d;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #48bb78;
+            margin: 15px 0;
+            display: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .question-actions {
+                flex-direction: column;
+            }
+
+            .progress-stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .controls .btn {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Interactive Document Learning</h1>
+            <p>Upload your document and get personalized questions to test your understanding</p>
+        </div>
+
+        <div class="content">
+            <!-- Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <h3>📄 Upload Your Document</h3>
+                
+                <!-- File Input Method 1: Hidden input with custom button -->
+                <input type="file" id="documentFile" accept=".txt,.md,.pdf,.docx" style="display: none;">
+                <button class="upload-button" onclick="triggerFileSelect()">
+                    📤 Select Document
+                </button>
+                
+                <p style="margin: 15px 0; color: #666;">or drag and drop your file here</p>
+                
+                <!-- File Input Method 2: Visible input as fallback -->
+                <div style="margin-top: 20px;">
+                    <label for="documentFileVisible" style="font-weight: 600; color: #333;">
+                        Alternative: Direct file input
+                    </label>
+                    <input 
+                        type="file" 
+                        id="documentFileVisible" 
+                        accept=".txt,.md,.pdf,.docx"
+                        style="margin-top: 10px; padding: 10px; border: 2px solid #667eea; border-radius: 8px; width: 100%;"
+                    >
+                </div>
+                
+                <div class="upload-info">
+                    Supported formats: TXT, MD, PDF, DOCX (Max 16MB)
+                </div>
+                <div class="upload-progress" id="uploadProgress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p>Processing your document...</p>
+                </div>
+            </div>
+
+            <!-- Progress Section -->
+            <div class="progress-section" id="progressSection">
+                <h3>📊 Your Learning Progress</h3>
+                <div class="progress-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" id="questionsAnswered">0</span>
+                        <span class="stat-label">Questions Answered</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="correctAnswers">0</span>
+                        <span class="stat-label">Correct Answers</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="questionsGenerated">0</span>
+                        <span class="stat-label">Questions Generated</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Questions Section -->
+            <div class="questions-section" id="questionsSection">
+                <h2 class="section-title">🤔 Test Your Understanding</h2>
+                <div id="questionsContainer"></div>
+                
+                <div class="controls" id="questionControls">
+                    <button class="btn btn-primary" id="generateMoreBtn">
+                        <span class="spinner" id="generateSpinner"></span>
+                        Generate More Questions
+                    </button>
+                    <button class="btn btn-outline" id="customQuestionBtn">Ask Your Own Question</button>
+                    <button class="btn btn-secondary" id="resetBtn">Start Over</button>
+                </div>
+            </div>
+
+            <!-- Custom Question Section -->
+            <div class="custom-question-section" id="customQuestionSection">
+                <h3>💭 Ask Your Own Question</h3>
+                <textarea 
+                    class="custom-input" 
+                    id="customQuestionInput" 
+                    placeholder="Enter your question about the document..."
+                    rows="3"
+                ></textarea>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-primary" id="submitCustomBtn">
+                        <span class="spinner" id="customSpinner"></span>
+                        Get Answer
+                    </button>
+                    <button class="btn btn-secondary" id="cancelCustomBtn">Cancel</button>
+                </div>
+                <div class="answer-section" id="customAnswerSection">
+                    <div class="answer-content" id="customAnswerContent"></div>
+                    <div class="answer-meta" id="customAnswerMeta"></div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        // State variables
+        let currentQuestions = [];
+        let questionsAnswered = 0;
+        let correctAnswers = 0;
+        let questionsGenerated = 0;
+
+        // DOM elements
+        const uploadSection = document.getElementById('uploadSection');
+        const progressSection = document.getElementById('progressSection');
+        const questionsSection = document.getElementById('questionsSection');
+        const customQuestionSection = document.getElementById('customQuestionSection');
+        const questionsContainer = document.getElementById('questionsContainer');
+        const questionControls = document.getElementById('questionControls');
+        const documentFile = document.getElementById('documentFile');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const progressFill = document.getElementById('progressFill');
+
+        // Initialize event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // File input event listeners - both hidden and visible inputs
+            const fileInput = document.getElementById('documentFile');
+            const fileInputVisible = document.getElementById('documentFileVisible');
+            
+            if (fileInput) {
+                fileInput.addEventListener('change', handleFileUpload);
+                console.log('Hidden file input listener added');
+            }
+            
+            if (fileInputVisible) {
+                fileInputVisible.addEventListener('change', handleFileUpload);
+                console.log('Visible file input listener added');
+            }
+            
+            // Button event listeners
+            const generateBtn = document.getElementById('generateMoreBtn');
+            const customBtn = document.getElementById('customQuestionBtn');
+            const submitBtn = document.getElementById('submitCustomBtn');
+            const cancelBtn = document.getElementById('cancelCustomBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            
+            if (generateBtn) generateBtn.addEventListener('click', generateMoreQuestions);
+            if (customBtn) customBtn.addEventListener('click', showCustomQuestionSection);
+            if (submitBtn) submitBtn.addEventListener('click', submitCustomQuestion);
+            if (cancelBtn) cancelBtn.addEventListener('click', hideCustomQuestionSection);
+            if (resetBtn) resetBtn.addEventListener('click', resetSession);
+            
+            // Drag and drop functionality
+            const uploadSec = document.getElementById('uploadSection');
+            if (uploadSec) {
+                uploadSec.addEventListener('dragover', handleDragOver);
+                uploadSec.addEventListener('dragleave', handleDragLeave);
+                uploadSec.addEventListener('drop', handleDrop);
+                console.log('Drag and drop listeners added');
+            }
+            
+            console.log('All event listeners initialized');
+        });
+
+        // Function to trigger file selection
+        function triggerFileSelect() {
+            console.log('Trigger file select clicked');
+            const fileInput = document.getElementById('documentFile');
+            if (fileInput) {
+                fileInput.click();
+                console.log('File input clicked');
+            } else {
+                console.error('File input not found');
+                showError('File input not found. Please use the alternative file input below.');
+            }
+        }
+
+        // File upload handler
+        async function handleFileUpload(event) {
+            console.log('File upload triggered:', event);
+            const file = event.target.files[0];
+            console.log('Selected file:', file);
+            
+            if (!file) {
+                console.log('No file selected');
+                return;
+            }
+            
+            // Show file name
+            showSuccessMessage(`Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+            
+            await uploadDocument(file);
+        }
+
+        // Drag and drop handlers
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                uploadDocument(files[0]);
+            }
+        }
+
+        // Upload document to server
+        async function uploadDocument(file) {
+            try {
+                showUploadProgress();
+                
+                const formData = new FormData();
+                formData.append('document', file);
+                
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Handle both formats - array of question objects or simple strings
+                    if (Array.isArray(data.questions) && data.questions.length > 0) {
+                        if (typeof data.questions[0] === 'object' && data.questions[0].question) {
+                            // New format with question objects
+                            currentQuestions = data.questions;
+                        } else {
+                            // Old format with simple strings
+                            currentQuestions = data.questions.map(q => ({ question: q, options: [] }));
+                        }
+                    } else {
+                        currentQuestions = [];
+                    }
+                    
+                    questionsGenerated = currentQuestions.length;
+                    
+                    hideUploadProgress();
+                    showSuccessMessage(`Document uploaded successfully! Generated ${currentQuestions.length} questions.`);
+                    
+                    // Show questions and hide upload section
+                    uploadSection.classList.add('hidden');
+                    progressSection.style.display = 'block';
+                    questionsSection.style.display = 'block';
+                    questionControls.style.display = 'block';
+                    
+                    displayQuestions(currentQuestions);
+                    updateProgress();
+                } else {
+                    hideUploadProgress();
+                    showError(data.error || 'Upload failed');
+                }
+                
+            } catch (error) {
+                hideUploadProgress();
+                showError('Network error: ' + error.message);
+            }
+        }
+
+        // Display questions
+        function displayQuestions(questions) {
+            questionsContainer.innerHTML = '';
+            
+            questions.forEach((questionData, index) => {
+                const questionCard = createQuestionCard(questionData, index);
+                questionsContainer.appendChild(questionCard);
+            });
+        }
+
+        // Generate multiple choice options for a question
+        function generateMultipleChoiceOptions(questionData) {
+            // Use options from API if available, otherwise generate fallback
+            if (questionData.options && questionData.options.length > 0) {
+                return questionData.options;
+            }
+            
+            // Fallback for old format or missing options
+            const question = typeof questionData === 'string' ? questionData : questionData.question;
+            const options = [
+                `Option A for: ${question.substring(0, 30)}...`,
+                `Option B for: ${question.substring(0, 30)}...`,
+                `Option C for: ${question.substring(0, 30)}...`,
+                `Option D for: ${question.substring(0, 30)}...`
+            ];
+            
+            return options;
+        }
+
+        // Create question card element with multiple choice
+        function createQuestionCard(questionData, index) {
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            
+            // Handle both old and new question formats
+            const question = typeof questionData === 'string' ? questionData : questionData.question;
+            const options = generateMultipleChoiceOptions(questionData);
+            
+            // Generate options HTML - handle both formats (with or without A), B) prefixes)
+            const optionsHTML = options.map((option, optionIndex) => {
+                // Clean the option text - remove existing A), B) etc. prefixes if present
+                let cleanOption = option.replace(/^[A-Z]\)\s*/, '');
+                
+                return `<div class="choice-option" onclick="selectOption(${index}, ${optionIndex})" data-option="${optionIndex}">
+                    ${String.fromCharCode(65 + optionIndex)}. ${cleanOption}
+                </div>`;
+            }).join('');
+            
+            card.innerHTML = `
+                <div class="question-text">${question}</div>
+                <div class="question-actions">
+                    <button class="btn btn-primary" onclick="showMultipleChoice(${index})">
+                        Show Options
+                    </button>
+                   <button 
+                        class="btn btn-outline" 
+                        data-question="${question}"
+                        onclick="answerQuestionFromButton(this, ${index})">
+                        <span class="spinner" id="spinner-${index}" style="display: none;"></span>
+                        Get Detailed Answer
+                    </button>
+
+                </div>
+                <div class="multiple-choice-section" id="multiple-choice-${index}">
+                    <h4 style="margin-bottom: 15px; color: #333;">Choose the correct answer:</h4>
+                    ${optionsHTML}
+                    <button class="submit-answer-btn" id="submit-${index}" onclick="submitAnswer(${index})">
+                        Submit Answer
+                    </button>
+                </div>
+                <div class="feedback-section" id="feedback-${index}">
+                    <span class="feedback-icon" id="feedback-icon-${index}"></span>
+                    <span id="feedback-text-${index}"></span>
+                </div>
+                <div class="answer-section" id="answer-${index}">
+                    <div class="answer-content" id="answer-content-${index}"></div>
+                    <div class="answer-meta" id="answer-meta-${index}"></div>
+                </div>
+            `;
+            return card;
+        }
+
+        function answerQuestionFromButton(button, index) {
+            const question = button.getAttribute('data-question');
+            answerQuestion(question, index);
+        }
+
+        // Show multiple choice options
+        function showMultipleChoice(index) {
+            const multipleChoiceSection = document.getElementById(`multiple-choice-${index}`);
+            multipleChoiceSection.style.display = 'block';
+            
+            // Hide the "Show Options" button
+            const card = multipleChoiceSection.closest('.question-card');
+            const showButton = card.querySelector('.btn-primary');
+            showButton.style.display = 'none';
+        }
+
+        // Select an option
+        function selectOption(questionIndex, optionIndex) {
+            const multipleChoiceSection = document.getElementById(`multiple-choice-${questionIndex}`);
+            const options = multipleChoiceSection.querySelectorAll('.choice-option');
+            const submitButton = document.getElementById(`submit-${questionIndex}`);
+            
+            // Remove previous selection
+            options.forEach(option => option.classList.remove('selected'));
+            
+            // Select current option
+            options[optionIndex].classList.add('selected');
+            
+            // Show submit button
+            submitButton.style.display = 'block';
+            
+            // Store selected option
+            submitButton.dataset.selectedOption = optionIndex;
+        }
+
+        // Submit answer
+        async function submitAnswer(questionIndex) {
+            const submitButton = document.getElementById(`submit-${questionIndex}`);
+            const selectedOption = parseInt(submitButton.dataset.selectedOption);
+        
+            if (isNaN(selectedOption)) {
+                showError('Please select an option first');
+                return;
+            }
+        
+            const multipleChoiceSection = document.getElementById(`multiple-choice-${questionIndex}`);
+            const options = multipleChoiceSection.querySelectorAll('.choice-option');
+        
+            // Make sure correctAnswer is within options length
+            const correctAnswer = Math.floor(Math.random() * options.length); // Random for demo
+            const isCorrect = selectedOption === correctAnswer;
+        
+            const feedbackSection = document.getElementById(`feedback-${questionIndex}`);
+            const feedbackIcon = document.getElementById(`feedback-icon-${questionIndex}`);
+            const feedbackText = document.getElementById(`feedback-text-${questionIndex}`);
+            const questionCard = multipleChoiceSection.closest('.question-card');
+        
+            // Disable all options
+            options.forEach(option => {
+                option.classList.add('disabled');
+                option.onclick = null;
+            });
+        
+            // Show correct/incorrect styling safely
+            if (options[correctAnswer]) {
+                options[correctAnswer].classList.add('correct');
+            }
+            if (selectedOption !== correctAnswer && options[selectedOption]) {
+                options[selectedOption].classList.add('incorrect');
+            }
+        
+            // Update feedback
+            if (isCorrect) {
+                feedbackSection.className = 'feedback-section correct';
+                feedbackIcon.textContent = '✅';
+                feedbackText.textContent = 'Correct! Well done!';
+                questionCard.classList.add('answered-correct');
+                correctAnswers++;
+            } else {
+                feedbackSection.className = 'feedback-section incorrect';
+                feedbackIcon.textContent = '❌';
+                feedbackText.textContent = `Incorrect. The correct answer is ${String.fromCharCode(65 + correctAnswer)}.`;
+                questionCard.classList.add('answered-incorrect');
+            }
+        
+            feedbackSection.style.display = 'block';
+            submitButton.style.display = 'none';
+            questionsAnswered++;
+        
+            updateProgress();
+        
+            // Log answer to API
+            try {
+                await fetch('/api/answer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                       // question: currentQuestions[questionIndex],
+                        question: currentQuestions[questionIndex],  // <-- fix this
+                        selectedOption: selectedOption,
+                        correctOption: correctAnswer,
+                        isCorrect: isCorrect
+                    })
+                });
+            } catch (error) {
+                console.log('Failed to log answer:', error);
+            }
+        }
+        
+
+        // Answer a specific question (detailed answer)
+        async function answerQuestion(question, index) {
+            try {
+                console.log('Answering question:', question);
+                console.log('Question index:', index);
+                const spinner = document.getElementById(`spinner-${index}`);
+                const answerSection = document.getElementById(`answer-${index}`);
+                const answerContent = document.getElementById(`answer-content-${index}`);
+                const answerMeta = document.getElementById(`answer-meta-${index}`);
+                
+                spinner.style.display = 'inline-block';
+                
+                const response = await fetch('/api/answer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: { "question": question } })
+                });
+            
+                const data = await response.json();
+            
+                if (data.success) {
+                    answerContent.textContent = data.answer;
+                    answerMeta.textContent = `Answered in ${data.query_time}s`;
+                    answerSection.style.display = 'block';
+                    
+                    const button = spinner.parentElement;
+                    button.className = 'btn btn-success';
+                    button.innerHTML = '✓ Answer Shown';
+                    button.disabled = true;
+        
+                    spinner.style.display = 'none';  // Hide spinner after showing answer
+                } else {
+                    spinner.style.display = 'none';  // Hide spinner before showing error
+                    showError(data.error || 'Failed to get answer');
+                }
+            } catch (error) {
+                const spinner = document.getElementById(`spinner-${index}`);
+                if (spinner) spinner.style.display = 'none';  // Hide spinner on error
+                showError('Network error: ' + error.message);
+            }
+        }        
+
+        // Generate more questions
+        async function generateMoreQuestions() {
+            try {
+                const button = document.getElementById('generateMoreBtn');
+                const spinner = document.getElementById('generateSpinner');
+                
+                button.disabled = true;
+                spinner.style.display = 'inline-block';
+                
+                const response = await fetch('/api/generate-more-questions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.questions.length > 0) {
+                    const newQuestions = data.questions;
+                    const startIndex = currentQuestions.length;
+                    
+                    // Handle both formats - array of question objects or simple strings
+                    let formattedQuestions;
+                    if (Array.isArray(newQuestions) && newQuestions.length > 0) {
+                        if (typeof newQuestions[0] === 'object' && newQuestions[0].question) {
+                            // New format with question objects
+                            formattedQuestions = newQuestions;
+                        } else {
+                            // Old format with simple strings
+                            formattedQuestions = newQuestions.map(q => ({ question: q, options: [] }));
+                        }
+                    } else {
+                        formattedQuestions = [];
+                    }
+                    
+                    currentQuestions.push(...formattedQuestions);
+                    questionsGenerated = data.total_questions_generated || currentQuestions.length;
+                    
+                    // Add new question cards
+                    formattedQuestions.forEach((questionData, index) => {
+                        const questionCard = createQuestionCard(questionData, startIndex + index);
+                        questionsContainer.appendChild(questionCard);
+                    });
+                    
+                    updateProgress();
+                    showSuccessMessage(`Generated ${formattedQuestions.length} more questions!`);
+                } else {
+                    showError(data.error || 'No new questions could be generated');
+                }
+                
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            } finally {
+                const button = document.getElementById('generateMoreBtn');
+                const spinner = document.getElementById('generateSpinner');
+                button.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        // Show custom question section
+        function showCustomQuestionSection() {
+            customQuestionSection.style.display = 'block';
+            document.getElementById('customQuestionInput').focus();
+            hideCustomAnswer();
+        }
+
+        // Hide custom question section
+        function hideCustomQuestionSection() {
+            customQuestionSection.style.display = 'none';
+            document.getElementById('customQuestionInput').value = '';
+            hideCustomAnswer();
+        }
+
+        // Submit custom question
+        async function submitCustomQuestion() {
+            try {
+                const question = document.getElementById('customQuestionInput').value.trim();
+                
+                if (!question) {
+                    showError('Please enter a question');
+                    return;
+                }
+                
+                const button = document.getElementById('submitCustomBtn');
+                const spinner = document.getElementById('customSpinner');
+                
+                button.disabled = true;
+                spinner.style.display = 'inline-block';
+                
+                const response = await fetch('/api/custom-question', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: question })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('customAnswerContent').textContent = data.answer;
+                    document.getElementById('customAnswerMeta').textContent = `Answered in ${data.query_time}s`;
+                    document.getElementById('customAnswerSection').style.display = 'block';
+                } else {
+                    showError(data.error || 'Failed to get answer');
+                }
+                
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            } finally {
+                const button = document.getElementById('submitCustomBtn');
+                const spinner = document.getElementById('customSpinner');
+                button.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        // Hide custom answer
+        function hideCustomAnswer() {
+            document.getElementById('customAnswerSection').style.display = 'none';
+        }
+
+        // Reset session
+        async function resetSession() {
+            if (!confirm('Are you sure you want to start over? This will clear all progress.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Reset UI state
+                    currentQuestions = [];
+                    questionsAnswered = 0;
+                    correctAnswers = 0;
+                    questionsGenerated = 0;
+                    
+                    uploadSection.classList.remove('hidden');
+                    progressSection.style.display = 'none';
+                    questionsSection.style.display = 'none';
+                    questionControls.style.display = 'none';
+                    hideCustomQuestionSection();
+                    
+                    questionsContainer.innerHTML = '';
+                    document.getElementById('documentFile').value = '';
+                    document.getElementById('documentFileVisible').value = '';
+                    
+                    updateProgress();
+                    showSuccessMessage('Session reset successfully. You can upload a new document.');
+                } else {
+                    showError(data.error || 'Failed to reset session');
+                }
+                
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            }
+        }
+
+        // Update progress display
+        function updateProgress() {
+            document.getElementById('questionsAnswered').textContent = questionsAnswered;
+            document.getElementById('correctAnswers').textContent = correctAnswers;
+            document.getElementById('questionsGenerated').textContent = questionsGenerated;
+        }
+
+        // Show upload progress
+        function showUploadProgress() {
+            uploadProgress.style.display = 'block';
+            progressFill.style.width = '100%';
+        }
+
+        // Hide upload progress
+        function hideUploadProgress() {
+            uploadProgress.style.display = 'none';
+            progressFill.style.width = '0%';
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            // Hide after 5 seconds
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Show success message
+        function showSuccessMessage(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // Enhanced API error handling
+        async function handleApiCall(url, options, errorMessage = 'API call failed') {
+            try {
+                const response = await fetch(url, options);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('API Error:', error);
+                showError(`${errorMessage}: ${error.message}`);
+                throw error;
+            }
+        }
+
+        // Improved question generation with better options
+        async function generateQuestionWithOptions(question) {
+            try {
+                const response = await handleApiCall('/api/generate-options', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: question })
+                }, 'Failed to generate options');
+                
+                if (response.success && response.options) {
+                    return response.options;
+                }
+            } catch (error) {
+                console.log('Using fallback options generation');
+            }
+            
+            // Fallback to simple option generation
+            return generateMultipleChoiceOptions(question);
+        }
+
+        // Save user progress to localStorage
+        function saveProgress() {
+            const progress = {
+                questionsAnswered,
+                correctAnswers,
+                questionsGenerated,
+                timestamp: Date.now()
+            };
+            localStorage.setItem('learningProgress', JSON.stringify(progress));
+        }
+
+        // Load user progress from localStorage
+        function loadProgress() {
+            try {
+                const saved = localStorage.getItem('learningProgress');
+                if (saved) {
+                    const progress = JSON.parse(saved);
+                    // Only load if it's recent (within 24 hours)
+                    if (Date.now() - progress.timestamp < 24 * 60 * 60 * 1000) {
+                        questionsAnswered = progress.questionsAnswered || 0;
+                        correctAnswers = progress.correctAnswers || 0;
+                        questionsGenerated = progress.questionsGenerated || 0;
+                        updateProgress();
+                    }
+                }
+            } catch (error) {
+                console.log('Failed to load progress:', error);
+            }
+        }
+
+        // Auto-save progress when values change
+        function updateProgressWithSave() {
+            updateProgress();
+            saveProgress();
+        }
+
+        // Initialize progress loading on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProgress();
+        });
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            // Press 'R' to reset (with Ctrl/Cmd)
+            if ((event.ctrlKey || event.metaKey) && event.key === 'r') {
+                event.preventDefault();
+                resetSession();
+            }
+            
+            // Press 'G' to generate more questions (with Ctrl/Cmd)
+            if ((event.ctrlKey || event.metaKey) && event.key === 'g') {
+                event.preventDefault();
+                if (questionsSection.style.display === 'block') {
+                    generateMoreQuestions();
+                }
+            }
+            
+            // Press 'Q' to open custom question (with Ctrl/Cmd)
+            if ((event.ctrlKey || event.metaKey) && event.key === 'q') {
+                event.preventDefault();
+                if (questionsSection.style.display === 'block') {
+                    showCustomQuestionSection();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
